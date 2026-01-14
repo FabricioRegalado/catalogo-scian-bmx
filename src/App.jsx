@@ -28,7 +28,7 @@ export default function App() {
 
   // Cargar catálogo ya convertido a JSON
   useEffect(() => {
-    fetch("/catalogo.json")
+    fetch("./catalogo.json")
       .then((r) => {
         if (!r.ok) throw new Error("No se pudo cargar catalogo.json");
         return r.json();
