@@ -1,16 +1,82 @@
-# React + Vite
+# Catálogo SCIAN → BMX
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+Herramienta web interactiva para consultar la clasificación de actividades económicas del SCIAN y sus correspondencias con las clasificaciones BMX.
 
-Currently, two official plugins are available:
+## Características
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Babel](https://babeljs.io/) (or [oxc](https://oxc.rs) when used in [rolldown-vite](https://vite.dev/guide/rolldown)) for Fast Refresh
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/) for Fast Refresh
+- Búsqueda rápida en tiempo real con normalización de texto (acentos, espacios)
+- Debounce optimizado para evitar sobre-renderizados
+- Interfaz limpia y natural con paleta de colores sofisticada
+- Datos actualizados desde CSV convertido a JSON
+- Responsive y accesible
 
-## React Compiler
+## Instalación
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+```bash
+git clone https://github.com/tuUsuario/catalogo-scian-bmx.git
+cd catalogo-scian-bmx
+npm install
+```
 
-## Expanding the ESLint configuration
+## Desarrollo
 
-If you are developing a production application, we recommend using TypeScript with type-aware lint rules enabled. Check out the [TS template](https://github.com/vitejs/vite/tree/main/packages/create-vite/template-react-ts) for information on how to integrate TypeScript and [`typescript-eslint`](https://typescript-eslint.io) in your project.
+```bash
+npm run dev
+```
+
+Se abrirá en `http://localhost:5173`
+
+## Build
+
+```bash
+npm run build
+```
+
+Genera los archivos optimizados en `dist/`
+
+## Deploy en GitHub Pages
+
+```bash
+npm run deploy
+```
+
+Tu sitio estará disponible en: `https://tuUsuario.github.io/catalogo-scian-bmx/`
+
+## Comandos disponibles
+
+- `npm run dev` - Inicia servidor de desarrollo
+- `npm run build` - Construye para producción
+- `npm run build:catalogo` - Convierte CSV a JSON
+- `npm run deploy` - Deploy a GitHub Pages
+- `npm run preview` - Previsualiza el build
+- `npm run lint` - Verifica el código
+
+## Estructura
+
+```
+src/
+├── App.jsx           # Componente principal
+├── App.css          # Estilos
+├── main.jsx         # Punto de entrada
+└── index.css        # Estilos globales
+
+data/
+└── catalogo.csv     # Datos origen
+
+scripts/
+└── csv-to-json.js   # Conversor CSV → JSON
+
+public/
+└── catalogo.json    # Datos compilados
+```
+
+## Stack
+
+- React 19 - UI
+- Vite - Build tool
+- PapaParse - CSV parsing
+- ESLint - Linting
+
+## Licencia
+
+MIT
