@@ -392,7 +392,7 @@ export default function App() {
                     <tr style={{ textAlign: "left", borderBottom: "1px solid #e8e4df", backgroundColor: "#f5f5f5" }}>
                       <th style={{ padding: "16px 24px", color: "#525047", fontWeight: "700", width: "200px" }}>Actividad BMXID</th>
                       <th style={{ padding: "16px 24px", color: "#525047", fontWeight: "700" }}>Descripción</th>
-                      <th style={{ padding: "16px 24px", color: "#525047", fontWeight: "700", width: "50px", textAlign: "center" }}>Copiar</th>
+                      <th style={{ padding: "16px 24px", color: "#525047", fontWeight: "700", width: "50px", textAlign: "center" }}></th>
                     </tr>
                   </thead>
                   <tbody>
