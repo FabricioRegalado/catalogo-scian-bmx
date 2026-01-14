@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
+import catalogoData from "../public/catalogo.json";
 
 function normalizeText(s) {
   return String(s || "")
@@ -28,16 +29,13 @@ export default function App() {
 
   // Cargar catálogo ya convertido a JSON
   useEffect(() => {
-    fetch("./catalogo.json")
-      .then((r) => {
-        if (!r.ok) throw new Error("No se pudo cargar catalogo.json");
-        return r.json();
-      })
-      .then((data) => setRows(Array.isArray(data) ? data : []))
-      .catch((e) => {
-        console.error(e);
-        setRows([]);
-      });
+    try {
+      const data = catalogoData;
+      setRows(Array.isArray(data) ? data : []);
+    } catch (e) {
+      console.error("Error cargando catálogo:", e);
+      setRows([]);
+    }
   }, []);
 
   // Filtrar por DescripcionCIAN
