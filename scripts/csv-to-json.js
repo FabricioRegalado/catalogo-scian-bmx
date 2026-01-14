@@ -8,7 +8,7 @@ const csvPath = path.join(root, "data", "catalogo.csv");
 const jsonOutPath = path.join(root, "public", "catalogo.json");
 
 if (!fs.existsSync(csvPath)) {
-  console.error("❌ No se encontró:", csvPath);
+  console.error("No se encontró:", csvPath);
   process.exit(1);
 }
 
@@ -20,7 +20,7 @@ const parsed = Papa.parse(csvText, {
 });
 
 if (parsed.errors.length) {
-  console.error("❌ Error al parsear CSV:", parsed.errors);
+  console.error("Error al parsear CSV:", parsed.errors);
   process.exit(1);
 }
 
@@ -36,4 +36,4 @@ const clean = parsed.data
 
 fs.writeFileSync(jsonOutPath, JSON.stringify(clean, null, 2), "utf8");
 
-console.log(`✅ catalogo.json generado (${clean.length} filas)`);
+console.log(`catalogo.json generado (${clean.length} filas)`);
