@@ -1,6 +1,11 @@
 import { useEffect, useMemo, useState } from "react";
 import catalogoData from "../public/catalogo.json";
 
+/**
+ * Normaliza texto para búsquedas: convierte a minúsculas, elimina acentos y espacios extras
+ * @param {string} s - Texto a normalizar
+ * @returns {string} Texto normalizado
+ */
 function normalizeText(s) {
   return String(s || "")
     .toLowerCase()
@@ -10,6 +15,12 @@ function normalizeText(s) {
     .trim();
 }
 
+/**
+ * Hook personalizado que debouncea un valor para evitar actualizaciones excesivas
+ * @param {any} value - Valor a desbouncer
+ * @param {number} delay - Tiempo de espera en milisegundos (default: 250ms)
+ * @returns {any} Valor debounceado
+ */
 function useDebouncedValue(value, delay = 250) {
   const [debounced, setDebounced] = useState(value);
 
@@ -21,13 +32,21 @@ function useDebouncedValue(value, delay = 250) {
   return debounced;
 }
 
+/**
+ * Componente principal del catálogo SCIAN → BMX
+ * Permite buscar y visualizar correspondencias entre clasificaciones SCIAN y BMX
+ */
 export default function App() {
+  // Estado: todos los registros del catálogo
   const [rows, setRows] = useState([]);
+  // Estado: término de búsqueda actual
   const [q, setQ] = useState("");
+  // Término de búsqueda con debounce para optimizar el renderizado
   const debouncedQ = useDebouncedValue(q, 250);
+  // Estado: límite de resultados a mostrar
   const [maxToShow, setMaxToShow] = useState(200);
 
-  // Cargar catálogo ya convertido a JSON
+  // Cargar catálogo ya convertido a JSON al montar el componente
   useEffect(() => {
     try {
       const data = catalogoData;
@@ -38,7 +57,7 @@ export default function App() {
     }
   }, []);
 
-  // Filtrar por DescripcionCIAN
+  // Filtrar registros por DescripcionCIAN según el término de búsqueda
   const results = useMemo(() => {
     const term = normalizeText(debouncedQ);
     if (!term) return [];
@@ -47,7 +66,7 @@ export default function App() {
     );
   }, [debouncedQ, rows]);
 
-  // Agrupar por DescripcionCIAN
+  // Agrupar resultados por DescripcionCIAN para mejor visualización
   const grouped = useMemo(() => {
     const map = new Map();
     for (const r of results) {
@@ -61,7 +80,7 @@ export default function App() {
     }));
   }, [results]);
 
-  // Limitar render
+  // Limitar la cantidad de resultados renderizados para optimizar performance
   const groupedLimited = useMemo(() => {
     let count = 0;
     const out = [];
@@ -86,8 +105,9 @@ export default function App() {
       fontFamily: "-apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif",
       color: "#525047",
       minHeight: "100vh",
-      backgroundColor: "#faf9f7"
+      backgroundColor: "#f5f5f5"
     }}>
+      {/* Encabezado con título y contador de registros */}
       <div style={{ marginBottom: "32px" }}>
         <h1 style={{
           margin: "0 0 8px 0",
@@ -103,8 +123,9 @@ export default function App() {
         </p>
       </div>
 
+      {/* Panel de búsqueda y configuración */}
       <div style={{
-        backgroundColor: "#fefdfb",
+        backgroundColor: "#ffffff",
         padding: "24px",
         borderRadius: "16px",
         display: "grid",
@@ -114,6 +135,7 @@ export default function App() {
         border: "1px solid #e8e4df",
         boxShadow: "0 2px 8px rgba(0, 0, 0, 0.04)"
       }}>
+        {/* Input de búsqueda */}
         <div>
           <label style={{ display: "block", marginBottom: "8px", fontSize: "0.95rem", fontWeight: "700", color: "#3a3a37" }}>
             Buscar en el catálogo
@@ -130,24 +152,25 @@ export default function App() {
               borderRadius: "10px",
               border: "1px solid #ddd8d1",
               outline: "none",
-              backgroundColor: "#faf9f7",
+              backgroundColor: "#f5f5f5",
               transition: "all 0.2s",
               fontFamily: "inherit",
               color: "#3a3a37"
             }}
             onFocus={(e) => {
               e.target.style.borderColor = "#8b9d9e";
-              e.target.style.backgroundColor = "#fefdfb";
+              e.target.style.backgroundColor = "#ffffff";
               e.target.style.boxShadow = "0 0 0 3px rgba(139, 157, 158, 0.08)";
             }}
             onBlur={(e) => {
               e.target.style.borderColor = "#ddd8d1";
-              e.target.style.backgroundColor = "#faf9f7";
+              e.target.style.backgroundColor = "#f5f5f5";
               e.target.style.boxShadow = "none";
             }}
           />
         </div>
 
+        {/* Selector de límite de resultados */}
         <div style={{ display: "flex", flexDirection: "column", justifyContent: "flex-end" }}>
           <select
             value={maxToShow}
@@ -158,7 +181,7 @@ export default function App() {
               fontWeight: "600",
               borderRadius: "10px",
               border: "1px solid #ddd8d1",
-              backgroundColor: "#fefdfb",
+              backgroundColor: "#ffffff",
               outline: "none",
               cursor: "pointer",
               minWidth: "180px",
@@ -183,6 +206,7 @@ export default function App() {
         </div>
       </div>
 
+      {/* Información de resultados encontrados */}
       {debouncedQ.trim() && (
         <div style={{ marginBottom: "24px", padding: "16px 20px", backgroundColor: "#f0f4f3", borderRadius: "12px", border: "1px solid #dce5e2", fontSize: "1rem", color: "#496b6d", fontWeight: "600" }}>
           Encontradas <span style={{ fontSize: "1.2rem", color: "#3a3a37" }}>{results.length}</span> coincidencias
@@ -194,12 +218,14 @@ export default function App() {
         </div>
       )}
 
+      {/* Contenedor de resultados agrupados */}
       <div>
+        {/* Mapear cada grupo de DescripcionCIAN */}
         {groupedLimited.out.map((g) => (
           <div
             key={g.DescripcionCIAN}
             style={{
-              backgroundColor: "#fefdfb",
+              backgroundColor: "#ffffff",
               borderRadius: "14px",
               marginBottom: "28px",
               overflow: "hidden",
@@ -220,18 +246,19 @@ export default function App() {
               {g.DescripcionCIAN}
             </div>
 
+            {/* Mostrar tabla si hay items, sino mostrar mensaje de categoría sin datos */}
             {g.items.length > 0 ? (
               <div style={{ overflowX: "auto" }}>
                 <table style={{ width: "100%", borderCollapse: "collapse", fontSize: "1rem" }}>
                   <thead>
-                    <tr style={{ textAlign: "left", borderBottom: "1px solid #e8e4df", backgroundColor: "#faf9f7" }}>
+                    <tr style={{ textAlign: "left", borderBottom: "1px solid #e8e4df", backgroundColor: "#f5f5f5" }}>
                       <th style={{ padding: "16px 24px", color: "#525047", fontWeight: "700", width: "200px" }}>Actividad BMX</th>
                       <th style={{ padding: "16px 24px", color: "#525047", fontWeight: "700" }}>Descripción</th>
                     </tr>
                   </thead>
                   <tbody>
                     {g.items.map((r, idx) => (
-                      <tr key={`${r.ActividadBMX}-${idx}`} style={{ borderBottom: idx === g.items.length - 1 ? "none" : "1px solid #f0ebe5", backgroundColor: idx % 2 === 0 ? "#fefdfb" : "#faf9f7", transition: "background-color 0.2s" }}>
+                      <tr key={`${r.ActividadBMX}-${idx}`} style={{ borderBottom: idx === g.items.length - 1 ? "none" : "1px solid #f0ebe5", backgroundColor: idx % 2 === 0 ? "#ffffff" : "#f5f5f5", transition: "background-color 0.2s" }}>
                         <td style={{ padding: "16px 24px", fontFamily: "'Courier New', monospace", color: "#6b7970", fontWeight: "600", fontSize: "0.95rem" }}>
                           {r.ActividadBMX}
                         </td>
@@ -248,7 +275,7 @@ export default function App() {
                 color: "#8a8680",
                 fontSize: "1rem",
                 lineHeight: "1.8",
-                backgroundColor: "#faf9f7"
+                backgroundColor: "#f5f5f5"
               }}>
                 <p style={{ margin: "0 0 12px 0", fontSize: "1.05rem", fontWeight: "600", color: "#525047" }}>Sin actividades asignadas</p>
                 <p style={{ margin: 0, fontSize: "0.95rem" }}>Esta categoría SCIAN no tiene correspondencias con actividades BMX registradas en el catálogo actual</p>
@@ -257,13 +284,14 @@ export default function App() {
           </div>
         ))}
 
+        {/* Mensaje cuando no se encuentra ningún resultado */}
         {debouncedQ.trim() && groupedLimited.out.length === 0 && (
           <div style={{
             textAlign: "center",
             padding: "60px 40px",
             color: "#8a8680",
             fontSize: "1.15rem",
-            backgroundColor: "#fefdfb",
+            backgroundColor: "#ffffff",
             borderRadius: "14px",
             border: "1px dashed #ddd8d1"
           }}>
