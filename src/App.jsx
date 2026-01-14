@@ -1,6 +1,54 @@
 import { useEffect, useMemo, useState } from "react";
 import catalogoData from "../public/catalogo.json";
 
+// Agregar estilos de animación
+const styles = `
+  @keyframes slideIn {
+    from {
+      opacity: 0;
+      transform: translateY(10px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+
+  @keyframes fadeIn {
+    from {
+      opacity: 0;
+    }
+    to {
+      opacity: 1;
+    }
+  }
+
+  @keyframes spin {
+    from {
+      transform: rotate(0deg);
+    }
+    to {
+      transform: rotate(360deg);
+    }
+  }
+
+  @keyframes pulse {
+    0%, 100% {
+      opacity: 1;
+    }
+    50% {
+      opacity: 0.5;
+    }
+  }
+`;
+
+// Inyectar estilos en el documento
+if (typeof document !== "undefined") {
+  const styleSheet = document.createElement("style");
+  styleSheet.textContent = styles;
+  document.head.appendChild(styleSheet);
+}
+
 /**
  * Normaliza texto para búsquedas: convierte a minúsculas, elimina acentos y espacios extras
  * @param {string} s - Texto a normalizar
@@ -45,6 +93,10 @@ export default function App() {
   const debouncedQ = useDebouncedValue(q, 250);
   // Estado: límite de resultados a mostrar
   const [maxToShow, setMaxToShow] = useState(200);
+  // Estado: item que se copió recientemente (para mostrar feedback visual)
+  const [copiedId, setCopiedId] = useState(null);
+  // Estado: indica si está procesando la búsqueda
+  const [isSearching, setIsSearching] = useState(false);
 
   // Cargar catálogo ya convertido a JSON al montar el componente
   useEffect(() => {
@@ -57,13 +109,35 @@ export default function App() {
     }
   }, []);
 
+  /**
+   * Copia el valor numérico de ActividadBMX al portapapeles
+   * @param {object} item - Elemento con ActividadBMX
+   */
+  const copyToClipboard = async (item) => {
+    try {
+      await navigator.clipboard.writeText(item.ActividadBMX);
+      
+      // Mostrar feedback visual temporal
+      setCopiedId(item.ActividadBMX);
+      setTimeout(() => setCopiedId(null), 2000);
+    } catch (err) {
+      console.error("Error al copiar:", err);
+    }
+  };
+
   // Filtrar registros por DescripcionCIAN según el término de búsqueda
   const results = useMemo(() => {
     const term = normalizeText(debouncedQ);
-    if (!term) return [];
-    return rows.filter((r) =>
+    if (!term) {
+      setIsSearching(false);
+      return [];
+    }
+    setIsSearching(true);
+    const filtered = rows.filter((r) =>
       normalizeText(r.DescripcionCIAN).includes(term)
     );
+    setIsSearching(false);
+    return filtered;
   }, [debouncedQ, rows]);
 
   // Agrupar resultados por DescripcionCIAN para mejor visualización
@@ -208,20 +282,83 @@ export default function App() {
 
       {/* Información de resultados encontrados */}
       {debouncedQ.trim() && (
-        <div style={{ marginBottom: "24px", padding: "16px 20px", backgroundColor: "#f0f4f3", borderRadius: "12px", border: "1px solid #dce5e2", fontSize: "1rem", color: "#496b6d", fontWeight: "600" }}>
-          Encontradas <span style={{ fontSize: "1.2rem", color: "#3a3a37" }}>{results.length}</span> coincidencias
-          {results.length > maxToShow && (
-             <span style={{ display: "block", marginTop: "6px", fontSize: "0.9rem", color: "#a87c4f", fontWeight: "500" }}>
-              Mostrando los primeros {groupedLimited.shown}
-            </span>
+        <div style={{ marginBottom: "24px", padding: "16px 20px", backgroundColor: "#f0f4f3", borderRadius: "12px", border: "1px solid #dce5e2", fontSize: "1rem", color: "#496b6d", fontWeight: "600", animation: "fadeIn 0.3s ease-out" }}>
+          {isSearching ? (
+            <div style={{ display: "flex", alignItems: "center", gap: "12px" }}>
+              <div style={{
+                width: "16px",
+                height: "16px",
+                border: "2px solid #dce5e2",
+                borderTop: "2px solid #496b6d",
+                borderRadius: "50%",
+                animation: "spin 0.6s linear infinite"
+              }} />
+              Buscando...
+            </div>
+          ) : (
+            <>
+              Encontradas <span style={{ fontSize: "1.2rem", color: "#3a3a37" }}>{results.length}</span> coincidencias
+              {results.length > maxToShow && (
+                <span style={{ display: "block", marginTop: "6px", fontSize: "0.9rem", color: "#a87c4f", fontWeight: "500" }}>
+                  Mostrando los primeros {groupedLimited.shown}
+                </span>
+              )}
+            </>
           )}
         </div>
       )}
 
       {/* Contenedor de resultados agrupados */}
       <div>
+        {/* Mensaje de notificación flotante */}
+        {copiedId && (
+          <div style={{
+            position: "fixed",
+            bottom: "24px",
+            right: "24px",
+            backgroundColor: "#4caf50",
+            color: "#ffffff",
+            padding: "16px 24px",
+            borderRadius: "8px",
+            boxShadow: "0 4px 12px rgba(0, 0, 0, 0.15)",
+            fontSize: "1rem",
+            fontWeight: "600",
+            zIndex: "1000",
+            animation: "slideIn 0.3s ease-out"
+          }}>
+            Id copiado al portapapeles
+          </div>
+        )}
+
+        {/* Indicador de carga general */}
+        {isSearching && groupedLimited.out.length === 0 && (
+          <div style={{
+            textAlign: "center",
+            padding: "60px 40px",
+            color: "#8a8680",
+            fontSize: "1.15rem",
+            backgroundColor: "#ffffff",
+            borderRadius: "14px",
+            border: "1px solid #e8e4df",
+            display: "flex",
+            flexDirection: "column",
+            alignItems: "center",
+            gap: "16px",
+            animation: "fadeIn 0.3s ease-out"
+          }}>
+            <div style={{
+              width: "40px",
+              height: "40px",
+              border: "3px solid #e8e4df",
+              borderTop: "3px solid #8a8680",
+              borderRadius: "50%",
+              animation: "spin 0.6s linear infinite"
+            }} />
+            Filtrando resultados...
+          </div>
+        )}
         {/* Mapear cada grupo de DescripcionCIAN */}
-        {groupedLimited.out.map((g) => (
+        {groupedLimited.out.map((g, groupIdx) => (
           <div
             key={g.DescripcionCIAN}
             style={{
@@ -231,7 +368,8 @@ export default function App() {
               overflow: "hidden",
               border: "1px solid #e8e4df",
               boxShadow: "0 2px 8px rgba(0, 0, 0, 0.04)",
-              transition: "all 0.2s"
+              transition: "all 0.2s",
+              animation: `slideIn 0.4s ease-out ${groupIdx * 0.05}s both`
             }}
           >
             <div style={{
@@ -252,17 +390,43 @@ export default function App() {
                 <table style={{ width: "100%", borderCollapse: "collapse", fontSize: "1rem" }}>
                   <thead>
                     <tr style={{ textAlign: "left", borderBottom: "1px solid #e8e4df", backgroundColor: "#f5f5f5" }}>
-                      <th style={{ padding: "16px 24px", color: "#525047", fontWeight: "700", width: "200px" }}>Actividad BMX</th>
+                      <th style={{ padding: "16px 24px", color: "#525047", fontWeight: "700", width: "200px" }}>Actividad BMXID</th>
                       <th style={{ padding: "16px 24px", color: "#525047", fontWeight: "700" }}>Descripción</th>
+                      <th style={{ padding: "16px 24px", color: "#525047", fontWeight: "700", width: "50px", textAlign: "center" }}>Copiar</th>
                     </tr>
                   </thead>
                   <tbody>
                     {g.items.map((r, idx) => (
-                      <tr key={`${r.ActividadBMX}-${idx}`} style={{ borderBottom: idx === g.items.length - 1 ? "none" : "1px solid #f0ebe5", backgroundColor: idx % 2 === 0 ? "#ffffff" : "#f5f5f5", transition: "background-color 0.2s" }}>
+                      <tr key={`${r.ActividadBMX}-${idx}`} style={{ borderBottom: idx === g.items.length - 1 ? "none" : "1px solid #f0ebe5", backgroundColor: idx % 2 === 0 ? "#ffffff" : "#f5f5f5", transition: "background-color 0.2s", animation: `fadeIn 0.3s ease-out ${idx * 0.02}s both` }}>
                         <td style={{ padding: "16px 24px", fontFamily: "'Courier New', monospace", color: "#6b7970", fontWeight: "600", fontSize: "0.95rem" }}>
                           {r.ActividadBMX}
                         </td>
                         <td style={{ padding: "16px 24px", color: "#525047", lineHeight: "1.5" }}>{r.DescripcionBMX}</td>
+                        <td style={{ padding: "16px 24px", textAlign: "center" }}>
+                          <button
+                            onClick={() => copyToClipboard(r)}
+                            title="Copiar al portapapeles"
+                            style={{
+                              background: copiedId === r.ActividadBMX ? "#4caf50" : "#f0ebe5",
+                              border: copiedId === r.ActividadBMX ? "1px solid #45a049" : "1px solid #ddd8d1",
+                              color: copiedId === r.ActividadBMX ? "#ffffff" : "#525047",
+                              padding: "8px 12px",
+                              borderRadius: "8px",
+                              cursor: "pointer",
+                              fontSize: "0.9rem",
+                              fontWeight: "600",
+                              transition: "all 0.2s",
+                              display: "flex",
+                              alignItems: "center",
+                              justifyContent: "center",
+                              width: "100px",
+                              height: "40px",
+                              margin: "0 auto"
+                            }}
+                          >
+                            {copiedId === r.ActividadBMX ? "✓ Copiado" : "Copiar"}
+                          </button>
+                        </td>
                       </tr>
                     ))}
                   </tbody>
